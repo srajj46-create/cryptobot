@@ -24,7 +24,18 @@ jobs:
           mkdir -p app/src/main/assets
           curl -fsSL -o app/src/main/assets/common.txt https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt
           curl -fsSL -o app/src/main/assets/full.txt https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt
-      - run: gradle assembleDebug --no-daemon
+      - name: Build
+        run: |
+          set +e
+          gradle assembleDebug --no-daemon --stacktrace > build.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            echo '### Build error' >> $GITHUB_STEP_SUMMARY
+            echo '~~~' >> $GITHUB_STEP_SUMMARY
+            grep -E -A4 "^e: |What went wrong|error:" build.log | head -60 >> $GITHUB_STEP_SUMMARY
+            echo '~~~' >> $GITHUB_STEP_SUMMARY
+          fi
+          exit $code
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
