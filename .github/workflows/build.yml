@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Unzip project.zip
         run: if [ -f project.zip ]; then unzip -o project.zip -x ".github/*"; fi
+      - name: Patch code
+        run: sed -i 's/val cy = bb.centerY()$/val cy = bb.centerY().toFloat()/' app/src/main/java/com/example/cryptobot/BotService.kt
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -32,7 +34,7 @@ jobs:
           if [ $code -ne 0 ]; then
             echo '### Build error' >> $GITHUB_STEP_SUMMARY
             echo '~~~' >> $GITHUB_STEP_SUMMARY
-            grep -E -A4 "^e: |What went wrong|error:" build.log | head -60 >> $GITHUB_STEP_SUMMARY
+            grep -E -A4 "^e: |What went wrong" build.log | sed 's#file:///home/runner/work/cryptobot/cryptobot/app/src/main/java/com/example/cryptobot/##' | fold -w 50 | head -60 >> $GITHUB_STEP_SUMMARY
             echo '~~~' >> $GITHUB_STEP_SUMMARY
           fi
           exit $code
